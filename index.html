@@ -243,22 +243,26 @@ async function fetchAlerts() {
 
         if (!res.ok) throw new Error("Alerts fetch failed");
 
-        const data = await res.json();
+        const data = await res.json();                         // ✅ moved inside
         statusUpdate.innerText = `Last checked: ${new Date().toLocaleTimeString()}`;
 
-        if (!data.features || data.features.length === 0) {
+        const filteredAlerts = data.features.filter(alert => { // ✅ moved inside
+            const area = alert.properties.areaDesc || '';
+            return TARGET_COUNTIES.some(county => area.includes(county));
+        });
+
+        if (!filteredAlerts || filteredAlerts.length === 0) {
             displayArea.innerHTML = `
                 <div class="no-alerts">
                     <span style="font-size: 3rem;">☀️</span>
                     <h3>All Clear</h3>
-                    <p>No active alerts for ${CONFIG.state}.</p>
+                    <p>No active alerts for your area.</p>
                 </div>`;
             return;
         }
 
         displayArea.innerHTML = filteredAlerts.map(alert => {
             const p = alert.properties;
-
             return `
                 <div class="alert-card">
                     <span class="alert-title">${p.event}</span>
