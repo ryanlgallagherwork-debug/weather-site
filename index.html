@@ -99,16 +99,64 @@
         .obs-card {
             background: #2c3e50;
             color: white;
-            padding: 20px;
+            padding: 24px;
             border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
             margin-bottom: 30px;
         }
 
-        #current-temp { font-size: 3rem; font-weight: bold; margin: 0; }
+        .obs-station {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            opacity: 0.7;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .obs-main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        #current-temp {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1;
+        }
+
+        #current-desc {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .obs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            padding-top: 16px;
+        }
+
+        .obs-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .obs-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            opacity: 0.6;
+            letter-spacing: 0.05em;
+        }
+
+        .obs-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
 
         .radar-card {
             background: white;
@@ -122,16 +170,35 @@
 <body>
 <div class="container">
     <header>
-        <h1>Live Weather Alerts</h1>
+        <h1>Northwest Georgia Weather</h1>
         <div class="status-bar" id="status-update">Fetching latest data...</div>
     </header>
 
     <!-- Observations -->
-    <div class="obs-card" id="observations">
-        <span style="font-size: 0.9rem; text-transform: uppercase; opacity: 0.8;">Paulding County Airport (KPUJ)</span>
-        <p id="current-temp">--°F</p>
-        <p id="current-desc">Loading observations...</p>
-        <p id="current-wind" style="font-size: 0.9rem;"></p>
+    <div class="obs-card">
+        <div class="obs-station">Paulding County Airport (KPUJ)</div>
+        <div class="obs-main">
+            <p id="current-temp">--°F</p>
+            <p id="current-desc">Loading...</p>
+        </div>
+        <div class="obs-grid">
+            <div class="obs-item">
+                <span class="obs-label">Dewpoint</span>
+                <span class="obs-value" id="current-dewpoint">--</span>
+            </div>
+            <div class="obs-item">
+                <span class="obs-label">Wind Speed</span>
+                <span class="obs-value" id="current-wind">--</span>
+            </div>
+            <div class="obs-item">
+                <span class="obs-label">Wind Direction</span>
+                <span class="obs-value" id="current-wind-dir">--</span>
+            </div>
+            <div class="obs-item">
+                <span class="obs-label">Rainfall (1hr)</span>
+                <span class="obs-value" id="current-precip">--</span>
+            </div>
+        </div>
     </div>
 
     <!-- Alerts -->
@@ -139,9 +206,9 @@
         <div class="loading">Connecting to National Weather Service...</div>
     </div>
 
-    <!-- Radar (bottom) -->
+    <!-- Radar -->
     <div class="radar-card">
-        <iframe src="https://radar.weather.gov/ridge/standard/KFFC_loop.gif" width="100%" height="600" style="border:none; border-radius: 8px;"></iframe>
+        <iframe src="https://radar.weather.gov/ridge/standard/KFFC_loop.gif" width="100%" height="300" style="border:none; border-radius: 8px;"></iframe>
         <p style="font-size: 0.8rem; text-align: center; margin-top: 5px;">Peachtree City (KFFC) Live Radar</p>
     </div>
 </div>
@@ -158,9 +225,16 @@ const TARGET_COUNTIES = ['Paulding', 'Cobb', 'Douglas', 'Polk', 'Bartow', 'Chero
 
 const cToF = (c) => Math.round((c * 9/5) + 32);
 const msToMph = (ms) => Math.round(ms * 2.237);
+const mmToIn = (mm) => (mm / 25.4).toFixed(2);
 
 function safe(val, fallback = null) {
     return (val === null || val === undefined) ? fallback : val;
+}
+
+function degreesToCompass(deg) {
+    if (deg === null) return 'N/A';
+    const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+    return dirs[Math.round(deg / 22.5) % 16];
 }
 
 async function fetchObservationForStation(station) {
@@ -172,33 +246,43 @@ async function fetchObservationForStation(station) {
 }
 
 async function fetchObservations() {
-    const tempEl = document.getElementById('current-temp');
-    const descEl = document.getElementById('current-desc');
-    const windEl = document.getElementById('current-wind');
+    const tempEl    = document.getElementById('current-temp');
+    const descEl    = document.getElementById('current-desc');
+    const dewEl     = document.getElementById('current-dewpoint');
+    const windEl    = document.getElementById('current-wind');
+    const windDirEl = document.getElementById('current-wind-dir');
+    const precipEl  = document.getElementById('current-precip');
 
     for (const station of CONFIG.stations) {
         try {
             const prop = await fetchObservationForStation(station);
-            const tempC = safe(prop.temperature?.value);
-            const windMS = safe(prop.windSpeed?.value);
-            const desc = safe(prop.textDescription, "No description");
 
-            tempEl.innerText = tempC !== null ? `${cToF(tempC)}°F` : '--°F';
-            descEl.innerText = desc;
-            windEl.innerText = windMS !== null ? `Wind: ${msToMph(windMS)} mph` : '';
+            const tempC    = safe(prop.temperature?.value);
+            const dewC     = safe(prop.dewpoint?.value);
+            const windMS   = safe(prop.windSpeed?.value);
+            const windDeg  = safe(prop.windDirection?.value);
+            const precipMM = safe(prop.precipitationLastHour?.value);
+            const desc     = safe(prop.textDescription, 'No description');
+
+            tempEl.innerText    = tempC !== null ? `${cToF(tempC)}°F` : '--°F';
+            descEl.innerText    = desc;
+            dewEl.innerText     = dewC !== null ? `${cToF(dewC)}°F` : 'N/A';
+            windEl.innerText    = windMS !== null ? `${msToMph(windMS)} mph` : 'Calm';
+            windDirEl.innerText = windDeg !== null ? `${degreesToCompass(windDeg)} (${Math.round(windDeg)}°)` : 'N/A';
+            precipEl.innerText  = precipMM !== null && precipMM > 0 ? `${mmToIn(precipMM)}"` : 'None';
+
             return;
         } catch (err) {
             console.warn(`Station failed: ${station}`, err);
         }
     }
 
-    document.getElementById('current-desc').innerText = "Observations unavailable";
+    document.getElementById('current-desc').innerText = 'Observations unavailable';
     document.getElementById('current-temp').innerText = '--°F';
-    document.getElementById('current-wind').innerText = '';
 }
 
 async function fetchAlerts() {
-    const displayArea = document.getElementById('nws-alerts-display');
+    const displayArea  = document.getElementById('nws-alerts-display');
     const statusUpdate = document.getElementById('status-update');
 
     try {
@@ -206,7 +290,7 @@ async function fetchAlerts() {
             `https://api.weather.gov/alerts/active?area=${CONFIG.state}`,
             { headers: { 'User-Agent': CONFIG.userAgent } }
         );
-        if (!res.ok) throw new Error("Alerts fetch failed");
+        if (!res.ok) throw new Error('Alerts fetch failed');
 
         const data = await res.json();
         statusUpdate.innerText = `Last checked: ${new Date().toLocaleTimeString()}`;
