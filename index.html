@@ -169,54 +169,66 @@
 </head>
 <body>
 <div class="container">
-    <header>
+
+    <!-- SUPER HEADER -->
+    <header class="main-header">
         <h1>Northwest Georgia Weather</h1>
         <div class="status-bar" id="status-update">Fetching latest data...</div>
     </header>
 
-    <!-- Observations -->
-    <div class="obs-card">
-        <div class="obs-station">Paulding County Airport (KPUJ)</div>
+    <!-- ROW 2: OBSERVATIONS + ALERTS -->
+    <div class="top-widgets">
 
-        <div class="obs-main">
-            <p id="current-temp">--°F</p>
-            <p id="current-desc">Loading...</p>
+        <!-- Observations -->
+        <div class="obs-card">
+            <div class="obs-station">Paulding County Airport (KPUJ)</div>
+
+            <div class="obs-main">
+                <p id="current-temp">--°F</p>
+                <p id="current-desc">Loading...</p>
+            </div>
+
+            <div class="obs-grid">
+                <div class="obs-item">
+                    <span class="obs-label">Dewpoint</span>
+                    <span class="obs-value" id="current-dewpoint">--</span>
+                </div>
+
+                <div class="obs-item">
+                    <span class="obs-label">Wind Speed</span>
+                    <span class="obs-value" id="current-wind">--</span>
+                </div>
+
+                <div class="obs-item">
+                    <span class="obs-label">Wind Direction</span>
+                    <span class="obs-value" id="current-wind-dir">--</span>
+                </div>
+
+                <div class="obs-item">
+                    <span class="obs-label">Rainfall (1hr)</span>
+                    <span class="obs-value" id="current-precip">--</span>
+                </div>
+            </div>
         </div>
 
-        <div class="obs-grid">
-            <div class="obs-item">
-                <span class="obs-label">Dewpoint</span>
-                <span class="obs-value" id="current-dewpoint">--</span>
-            </div>
-
-            <div class="obs-item">
-                <span class="obs-label">Wind Speed</span>
-                <span class="obs-value" id="current-wind">--</span>
-            </div>
-
-            <div class="obs-item">
-                <span class="obs-label">Wind Direction</span>
-                <span class="obs-value" id="current-wind-dir">--</span>
-            </div>
-
-            <div class="obs-item">
-                <span class="obs-label">Rainfall (1hr)</span>
-                <span class="obs-value" id="current-precip">--</span>
-            </div>
+        <!-- Alerts -->
+        <div id="nws-alerts-display" class="alerts-card">
+            <div class="loading">Connecting to National Weather Service...</div>
         </div>
-    </div>
-</div>
 
-    <!-- Alerts -->
-    <div id="nws-alerts-display">
-        <div class="loading">Connecting to National Weather Service...</div>
     </div>
 
-    <!-- Radar -->
+    <!-- ROW 3: RADAR -->
     <div class="radar-card">
-        <iframe src="https://radar.weather.gov/ridge/standard/KFFC_loop.gif" width="100%" height="300" style="border:none; border-radius: 8px;"></iframe>
-        <p style="font-size: 0.8rem; text-align: center; margin-top: 5px;">Peachtree City (KFFC) Live Radar</p>
+        <iframe src="https://radar.weather.gov/ridge/standard/KFFC_loop.gif"
+                width="100%" height="300"
+                style="border:none; border-radius: 8px;">
+        </iframe>
+        <p style="font-size: 0.8rem; text-align: center; margin-top: 5px;">
+            Peachtree City (KFFC) Live Radar
+        </p>
     </div>
+
 </div>
 
 <script>
