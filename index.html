@@ -164,33 +164,33 @@ const CONFIG = {
 };
 
 /* ================= HELPERS ================= */
-const TARGET_COUNTIES = ['Paulding', 'Cobb', 'Douglas', 'Polk', 'Bartow', 'Cherokee', 'Cobb', 'Harralson', 'Floyd'];
-const data = await res.json();
+That confirms it exactly. The orphaned await line is still in your deployed code. You need to push the fix to GitHub.
 
-const filteredAlerts = data.features.filter(alert => {
-    const area = alert.properties.areaDesc || '';
-    return TARGET_COUNTIES.some(county => area.includes(county));
-});
+Here's your complete corrected script block — replace everything between your <script> tags with this:
+
+javascript
+const CONFIG = {
+    state: 'GA',
+    stations: ['KPUJ', 'KRYY', 'KATL'],
+    userAgent: '(Ryan Gallagher Weather, ryanlgallagherwork@gmail.com)',
+    refreshMs: 60000
+};
+
+const TARGET_COUNTIES = ['Paulding', 'Cobb', 'Douglas', 'Polk', 'Bartow', 'Cherokee', 'Haralson', 'Floyd'];
 
 const cToF = (c) => Math.round((c * 9/5) + 32);
-const msToMph = (ms) => Math.round(ms * 0.621371);
+const msToMph = (ms) => Math.round(ms * 2.237);
 
 function safe(val, fallback = null) {
     return (val === null || val === undefined) ? fallback : val;
 }
 
-/* ================= OBSERVATIONS ================= */
 async function fetchObservationForStation(station) {
-    const url = `https://api.weather.gov/stations/${station}/observations/latest`;
-
-    const res = await fetch(url, {
+    const res = await fetch(`https://api.weather.gov/stations/${station}/observations/latest`, {
         headers: { 'User-Agent': CONFIG.userAgent }
     });
-
     if (!res.ok) throw new Error(`Station ${station} failed`);
-
-    const data = await res.json();
-    return data.properties;
+    return (await res.json()).properties;
 }
 
 async function fetchObservations() {
@@ -201,36 +201,24 @@ async function fetchObservations() {
     for (const station of CONFIG.stations) {
         try {
             const prop = await fetchObservationForStation(station);
-
             const tempC = safe(prop.temperature?.value);
             const windMS = safe(prop.windSpeed?.value);
             const desc = safe(prop.textDescription, "No description");
 
-            // Temperature
             tempEl.innerText = tempC !== null ? `${cToF(tempC)}°F` : '--°F';
-
-            // Description
             descEl.innerText = desc;
-
-            // Wind
-            windEl.innerText = windMS !== null
-                ? `Wind: ${msToMph(windMS)} mph`
-                : '';
-
-            return; // SUCCESS → stop trying fallback stations
-
+            windEl.innerText = windMS !== null ? `Wind: ${msToMph(windMS)} mph` : '';
+            return;
         } catch (err) {
             console.warn(`Station failed: ${station}`, err);
         }
     }
 
-    // If ALL stations fail
-    descEl.innerText = "Observations unavailable";
-    tempEl.innerText = '--°F';
-    windEl.innerText = '';
+    document.getElementById('current-desc').innerText = "Observations unavailable";
+    document.getElementById('current-temp').innerText = '--°F';
+    document.getElementById('current-wind').innerText = '';
 }
 
-/* ================= ALERTS ================= */
 async function fetchAlerts() {
     const displayArea = document.getElementById('nws-alerts-display');
     const statusUpdate = document.getElementById('status-update');
@@ -240,18 +228,17 @@ async function fetchAlerts() {
             `https://api.weather.gov/alerts/active?area=${CONFIG.state}`,
             { headers: { 'User-Agent': CONFIG.userAgent } }
         );
-
         if (!res.ok) throw new Error("Alerts fetch failed");
 
-        const data = await res.json();                         // ✅ moved inside
+        const data = await res.json();
         statusUpdate.innerText = `Last checked: ${new Date().toLocaleTimeString()}`;
 
-        const filteredAlerts = data.features.filter(alert => { // ✅ moved inside
+        const filteredAlerts = data.features.filter(alert => {
             const area = alert.properties.areaDesc || '';
             return TARGET_COUNTIES.some(county => area.includes(county));
         });
 
-        if (!filteredAlerts || filteredAlerts.length === 0) {
+        if (filteredAlerts.length === 0) {
             displayArea.innerHTML = `
                 <div class="no-alerts">
                     <span style="font-size: 3rem;">☀️</span>
@@ -277,16 +264,13 @@ async function fetchAlerts() {
 
     } catch (err) {
         console.error(err);
-        displayArea.innerHTML = `<div class="loading">Failed to load alerts</div>`;
+        displayArea.innerHTML = `<div class="loading">Failed to load alerts. Check console.</div>`;
     }
 }
 
-/* ================= INIT ================= */
 function init() {
     fetchObservations();
     fetchAlerts();
-
-    // Auto refresh
     setInterval(fetchObservations, CONFIG.refreshMs);
     setInterval(fetchAlerts, CONFIG.refreshMs);
 }
