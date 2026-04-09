@@ -164,6 +164,13 @@ const CONFIG = {
 };
 
 /* ================= HELPERS ================= */
+const TARGET_COUNTIES = ['Paulding', 'Cobb', 'Douglas', 'Polk', 'Bartow', 'Cherokee', 'Cobb', 'Harralson', 'Floyd'];
+
+const filteredAlerts = data.features.filter(alert => {
+    const area = alert.properties.areaDesc;
+    return TARGET_COUNTIES.some(county => area.includes(county));
+});
+    
 const cToF = (c) => Math.round((c * 9/5) + 32);
 const msToMph = (ms) => Math.round(ms * 0.621371);
 
@@ -248,7 +255,7 @@ async function fetchAlerts() {
             return;
         }
 
-        displayArea.innerHTML = data.features.map(alert => {
+        displayArea.innerHTML = filteredAlerts.map(alert => {
             const p = alert.properties;
 
             return `
