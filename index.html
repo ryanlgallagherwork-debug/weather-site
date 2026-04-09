@@ -177,29 +177,35 @@
     <!-- Observations -->
     <div class="obs-card">
         <div class="obs-station">Paulding County Airport (KPUJ)</div>
+
         <div class="obs-main">
             <p id="current-temp">--°F</p>
             <p id="current-desc">Loading...</p>
-    <div class="obs-grid">
-        <div class="obs-item">
-            <span class="obs-label">Dewpoint</span>
-            <span class="obs-value" id="current-dewpoint">--</span>
+        </div>
+
+        <div class="obs-grid">
+            <div class="obs-item">
+                <span class="obs-label">Dewpoint</span>
+                <span class="obs-value" id="current-dewpoint">--</span>
             </div>
-            </div>
+
             <div class="obs-item">
                 <span class="obs-label">Wind Speed</span>
                 <span class="obs-value" id="current-wind">--</span>
             </div>
+
             <div class="obs-item">
                 <span class="obs-label">Wind Direction</span>
                 <span class="obs-value" id="current-wind-dir">--</span>
             </div>
+
             <div class="obs-item">
                 <span class="obs-label">Rainfall (1hr)</span>
                 <span class="obs-value" id="current-precip">--</span>
             </div>
         </div>
     </div>
+</div>
 
     <!-- Alerts -->
     <div id="nws-alerts-display">
@@ -224,7 +230,7 @@ const CONFIG = {
 const TARGET_COUNTIES = ['Paulding'];
 
 const cToF = (c) => Math.round((c * 9/5) + 32);
-const msToMph = (ms) => Math.round(ms * 1);
+const msToMph = (ms) => Math.round(ms * 0.621371);
 const mmToIn = (mm) => (mm / 25.4).toFixed(2);
 
 function safe(val, fallback = null) {
