@@ -365,32 +365,30 @@ init();
 <script>
 async function loadBlogFeed() {
     try {
-        const res = await fetch("https://ryanlgallagher.com/feed/");
-        if (!res.ok) throw new Error("Feed fetch failed");
+        const feedUrl = encodeURIComponent("https://ryanlgallagher.com/feed/");
+        const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${feedUrl}`);
+        if (!res.ok) throw new Error("rss2json request failed");
 
-        const text = await res.text();
-        const xml = new DOMParser().parseFromString(text, "text/xml");
+        const data = await res.json();
+        console.log("Feed response:", data); // temporary debug line
 
-        const item = xml.querySelector("item");
-        if (!item) throw new Error("No items in feed");
+        if (data.status !== "ok") throw new Error(`Feed error: ${data.message}`);
 
-        const title   = item.querySelector("title")?.textContent || "Untitled";
-        const link    = item.querySelector("link")?.textContent || "#";
-        const pubDate = item.querySelector("pubDate")?.textContent || "";
-        const desc    = item.querySelector("description")?.textContent || "";
+        const latest = data.items[0];
+        if (!latest) throw new Error("No items found");
 
-        // Strip HTML tags from description
+        // Strip HTML from description
         const stripped = new DOMParser()
-            .parseFromString(desc, "text/html")
+            .parseFromString(latest.description, "text/html")
             .body.textContent || "";
 
         document.getElementById("blog-feed").innerHTML = `
-            <h3>${title}</h3>
+            <h3>${latest.title}</h3>
             <p style="font-size: 0.8rem; opacity: 0.7;">
-                ${new Date(pubDate).toLocaleDateString()}
+                ${new Date(latest.pubDate).toLocaleDateString()}
             </p>
             <p>${stripped.substring(0, 140)}...</p>
-            <a href="${link}" target="_blank">Read full post →</a>
+            <a href="${latest.link}" target="_blank">Read full post →</a>
         `;
     } catch (error) {
         console.error("Blog feed error:", error);
@@ -398,7 +396,6 @@ async function loadBlogFeed() {
             "<p>⚠️ Unable to load blog feed.</p>";
     }
 }
-
 loadBlogFeed();
 </script>
 </body>
