@@ -208,6 +208,22 @@
                     <span class="obs-label">Rainfall (1hr)</span>
                     <span class="obs-value" id="current-precip">--</span>
                 </div>
+                <div class="obs-item">
+                   <span class="obs-label">Pressure</span>
+                   <span class="obs-value" id="current-pressure">--</span>
+                </div>
+                <div class="obs-item">
+                   <span class="obs-label">Visibility</span>
+                   <span class="obs-value" id="current-visibility">--</span>
+                </div>
+                <div class="obs-item">
+                   <span class="obs-label">24hr High</span>
+                <span class="obs-value" id="current-maxtemp">--</span>
+                </div>
+                <div class="obs-item">
+                  <span class="obs-label">24hr Low</span>
+                  <span class="obs-value" id="current-mintemp">--</span>
+                </div>
             </div>
         </div>
 
@@ -275,6 +291,10 @@ async function fetchObservations() {
     const windEl    = document.getElementById('current-wind');
     const windDirEl = document.getElementById('current-wind-dir');
     const precipEl  = document.getElementById('current-precip');
+    const pressureEl   = document.getElementById('current-pressure');
+    const visibilityEl = document.getElementById('current-visibility');
+    const maxTempEl    = document.getElementById('current-maxtemp');
+    const minTempEl    = document.getElementById('current-mintemp');
 
     for (const station of CONFIG.stations) {
         try {
@@ -286,6 +306,10 @@ async function fetchObservations() {
             const windDeg  = safe(prop.windDirection?.value);
             const precipMM = safe(prop.precipitationLastHour?.value);
             const desc     = safe(prop.textDescription, 'No description');
+            const pressurePa  = safe(prop.seaLevelPressure?.value);
+            const visibilityM = safe(prop.visibility?.value);
+            const maxTempC    = safe(prop.maxTemperatureLast24Hours?.value);
+            const minTempC    = safe(prop.minTemperatureLast24Hours?.value);
 
             tempEl.innerText    = tempC !== null ? `${cToF(tempC)}°F` : '--°F';
             descEl.innerText    = desc;
@@ -293,6 +317,10 @@ async function fetchObservations() {
             windEl.innerText    = windMS !== null ? `${msToMph(windMS)} mph` : 'Calm';
             windDirEl.innerText = windDeg !== null ? `${degreesToCompass(windDeg)} (${Math.round(windDeg)}°)` : 'N/A';
             precipEl.innerText  = precipMM !== null && precipMM > 0 ? `${mmToIn(precipMM)}"` : 'None';
+            pressureEl.innerText  = pressurePa !== null ? `${(pressurePa / 100).toFixed(1)} mb` : 'N/A';
+            visibilityEl.innerText = visibilityM !== null ? `${(visibilityM / 1609.34).toFixed(1)} mi` : 'N/A';
+            maxTempEl.innerText   = maxTempC !== null ? `${cToF(maxTempC)}°F` : 'N/A';
+            minTempEl.innerText   = minTempC !== null ? `${cToF(minTempC)}°F` : 'N/A';
 
             return;
         } catch (err) {
