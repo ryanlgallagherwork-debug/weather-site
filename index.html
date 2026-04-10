@@ -415,7 +415,7 @@ async function loadBlogFeed() {
             <p style="font-size: 0.8rem; opacity: 0.7;">
                 ${new Date(latest.pubDate).toLocaleDateString()}
             </p>
-            <p>${stripped.substring(0, 140)}...</p>
+            <p>${stripped.substring(0, 240)}...</p>
             <a href="${latest.link}" target="_blank">Read full post →</a>
         `;
     } catch (error) {
