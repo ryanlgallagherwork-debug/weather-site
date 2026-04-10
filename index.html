@@ -364,23 +364,36 @@ init();
 </script>
 <script>
 async function loadBlogFeed() {
-    const feedUrl = "https://api.rss2json.com/v1/api.json?rss_url=https://ryanlgallagher.com/feed/";
-
     try {
-        const response = await fetch(feedUrl);
-        const data = await response.json();
+        const res = await fetch("https://ryanlgallagher.com/feed/");
+        if (!res.ok) throw new Error("Feed fetch failed");
 
-        const latest = data.items[0];
+        const text = await res.text();
+        const xml = new DOMParser().parseFromString(text, "text/xml");
+
+        const item = xml.querySelector("item");
+        if (!item) throw new Error("No items in feed");
+
+        const title   = item.querySelector("title")?.textContent || "Untitled";
+        const link    = item.querySelector("link")?.textContent || "#";
+        const pubDate = item.querySelector("pubDate")?.textContent || "";
+        const desc    = item.querySelector("description")?.textContent || "";
+
+        // Strip HTML tags from description
+        const stripped = new DOMParser()
+            .parseFromString(desc, "text/html")
+            .body.textContent || "";
 
         document.getElementById("blog-feed").innerHTML = `
-            <h3>${latest.title}</h3>
+            <h3>${title}</h3>
             <p style="font-size: 0.8rem; opacity: 0.7;">
-                ${new Date(latest.pubDate).toLocaleDateString()}
+                ${new Date(pubDate).toLocaleDateString()}
             </p>
-            <p>${latest.description.substring(0, 140)}...</p>
-            <a href="${latest.link}" target="_blank">Read full post →</a>
+            <p>${stripped.substring(0, 140)}...</p>
+            <a href="${link}" target="_blank">Read full post →</a>
         `;
     } catch (error) {
+        console.error("Blog feed error:", error);
         document.getElementById("blog-feed").innerHTML =
             "<p>⚠️ Unable to load blog feed.</p>";
     }
